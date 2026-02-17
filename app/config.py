@@ -3,13 +3,15 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    database_username: str
-    database_password: str
-    database_hostname: str
-    database_port: str
-    database_name: str
+    # 👇 هذا الأساسي على Render
+    database_url: Optional[str] = None
 
-    database_url: Optional[str] = None   # ✅ أضفنا هذا
+    # 👇 خليه Optional عشان ما يطلبهم إذا DATABASE_URL موجود
+    database_username: Optional[str] = None
+    database_password: Optional[str] = None
+    database_hostname: Optional[str] = None
+    database_port: Optional[str] = None
+    database_name: Optional[str] = None
 
     secret_key: str
     algorithm: str
