@@ -3,15 +3,7 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    # 👇 هذا الأساسي على Render
-    database_url: Optional[str] = None
-
-    # 👇 خليه Optional عشان ما يطلبهم إذا DATABASE_URL موجود
-    database_username: Optional[str] = None
-    database_password: Optional[str] = None
-    database_hostname: Optional[str] = None
-    database_port: Optional[str] = None
-    database_name: Optional[str] = None
+    database_url: str
 
     secret_key: str
     algorithm: str
@@ -21,4 +13,4 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-settings = Settings() # type: ignore
+settings = Settings()  # type: ignore
