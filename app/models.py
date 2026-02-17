@@ -34,6 +34,9 @@ class User(Base):
         TIMESTAMP(timezone=True), nullable=False, server_default=text("now()")
     )
     phone_number = Column(String, nullable=True)
+    
+    posts = relationship("Post", back_populates="owner", cascade="all, delete-orphan")
+
 
 
 class Vote(Base):
