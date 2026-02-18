@@ -5,22 +5,33 @@ from fastapi import status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
-from .config import settings    
-
+from .config import settings
 from . import schemas, database, models
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-SECRET_KEY = settings.secret_key # type: ignore
-ALGORITHM = settings.algorithm  # type: ignore
-ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes # type: ignore
+# ✅ clean values (this fixes HS256 issues caused by quotes/spaces/newlines)
+SECRET_KEY = (settings.secret_key or "").strip()  # type: ignore
+ALGORITHM = (settings.algorithm or "").strip().upper()  # type: ignore
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes  # type: ignore
+
+# ✅ fail fast if env is wrong
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is empty/missing")
+if not ALGORITHM:
+    raise RuntimeError("ALGORITHM is empty/missing")
 
 
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+    try:
+        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    except Exception as e:
+        # clearer error in Render logs
+        raise RuntimeError(f"JWT encode failed (algorithm={ALGORITHM}): {e}")
 
 
 def verify_access_token(token: str, credentials_exception):
@@ -31,7 +42,6 @@ def verify_access_token(token: str, credentials_exception):
         if user_id is None:
             raise credentials_exception
 
-        # user_id غالباً بيطلع int من الـ JWT
         token_data = schemas.TokenData(id=int(user_id))
 
     except JWTError:
